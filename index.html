@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hub</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif; /* Changed font */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a1a2e; /* Darker background */
+            color: #e94560; /* Accent color for text */
+            overflow: hidden; /* Prevent scrolling due to game elements */
+            touch-action: manipulation; /* Prevent default touch behaviors */
+        }
+
+        #loading-screen {
+            text-align: center;
+            color: #0f3460; /* Dark blue text */
+        }
+
+        #loading-screen h1 {
+            font-size: 2.5em; /* Larger heading */
+            margin-bottom: 20px;
+        }
+
+        .loading-logo {
+            font-size: 1.5em; /* Adjusted size */
+            margin-top: 20px;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from {
+                transform: scale(1);
+                opacity: 1;
+            }
+            to {
+                transform: scale(1.1);
+                opacity: 0.7; /* Adjusted opacity */
+            }
+        }
+
+        #game-menu {
+            display: none;
+            text-align: center;
+            padding: 30px; /* Increased padding */
+            background-color: #0f3460; /* Dark blue background */
+            border-radius: 10px; /* More rounded corners */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* Stronger shadow */
+            max-width: 400px; /* Max width for menu */
+            width: 90%; /* Responsive width */
+            color: #e94560; /* Accent color */
+        }
+
+        #game-menu h2 {
+            margin-top: 0;
+            color: #e94560; /* Accent color */
+            font-size: 2em; /* Larger heading */
+            margin-bottom: 25px;
+        }
+
+        #game-menu button {
+            display: block;
+            width: 100%;
+            padding: 18px; /* Increased padding for larger touch target */
+            margin-bottom: 12px; /* Increased margin */
+            font-size: 1.2em; /* Larger font size */
+            cursor: pointer;
+            border: none;
+            border-radius: 8px; /* More rounded buttons */
+            background-color: #e94560; /* Accent color background */
+            color: white;
+            transition: background-color 0.3s ease, transform 0.1s ease; /* Added transform transition */
+        }
+
+        #game-menu button:hover {
+            background-color: #ba364d; /* Darker accent on hover */
+        }
+
+        #game-menu button:active {
+             transform: scale(0.98); /* Slight press effect */
+        }
+
+
+        #game-area {
+            display: none;
+            text-align: center;
+            position: relative; /* Needed for absolute positioning of game elements */
+            width: 100%;
+            height: 100vh; /* Take full viewport height */
+            touch-action: manipulation; /* Prevent default touch behaviors for the game area */
+            background-color: #1a1a2e; /* Consistent background */
+            color: #e94560; /* Consistent color */
+        }
+
+        /* Common styling for game containers */
+        #tic-tac-toe-game, #maze-game, #quiz-game, #dino-game {
+             display: none; /* Initially hidden */
+             margin-top: 0; /* Remove default margin-top */
+             padding: 20px; /* Add padding */
+             background-color: #0f3460; /* Dark blue background */
+             border-radius: 10px; /* Consistent rounded corners */
+             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); /* Consistent shadow */
+             max-width: 90%; /* Responsive max width */
+             margin-left: auto; /* Center block elements */
+             margin-right: auto; /* Center block elements */
+             box-sizing: border-box; /* Include padding in width */
+             height: calc(100vh - 40px); /* Adjust height to fit viewport with padding */
+             overflow-y: auto; /* Add scroll if content exceeds height */
+             display: flex; /* Use flexbox for layout */
+             flex-direction: column; /* Stack elements vertically */
+             justify-content: space-between; /* Space out content and button */
+             align-items: center; /* Center items horizontally */
+        }
+
+        /* Specific adjustments for games */
+        #tic-tac-toe-game {
+             max-width: 300px; /* Smaller max width for Tic Tac Toe */
+        }
+
+        #maze-game {
+             max-width: fit-content; /* Adjust to maze size */
+        }
+
+        #quiz-game {
+             max-width: 500px; /* Wider for quiz */
+        }
+
+
+        /* Tic Tac Toe Specific Styles */
+        #tic-tac-toe-game .board {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            grid-gap: 8px; /* Increased gap */
+            margin: 20px auto;
+            border: 3px solid #e94560; /* Accent border */
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        #tic-tac-toe-game .cell {
+            width: 80px;
+            height: 80px;
+            background-color: #e94560; /* Accent background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em; /* Larger font for X/O */
+            cursor: pointer;
+            border: none; /* Removed cell border */
+            color: #1a1a2e; /* Dark text color */
+            transition: background-color 0.2s ease;
+            min-width: 60px; /* Ensure minimum touch size */
+            min-height: 60px; /* Ensure minimum touch size */
+        }
+
+        #tic-tac-toe-game .cell:hover {
+            background-color: #ba364d; /* Darker accent on hover */
+        }
+
+         #tic-tac-toe-game .cell:active {
+             transform: scale(0.95); /* Slight press effect */
+         }
+
+        #tic-tac-toe-game #game-status {
+            margin-top: 15px;
+            font-size: 1.5em;
+            color: #e94560; /* Accent color */
+        }
+
+        #tic-tac-toe-game #reset-button {
+            margin-top: 25px;
+            padding: 15px 25px; /* Increased padding */
+            font-size: 1.1em;
+            cursor: pointer;
+            background-color: #e94560; /* Accent color */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+         #tic-tac-toe-game #reset-button:hover {
+            background-color: #ba364d; /* Darker accent on hover */
+        }
+
+         #tic-tac-toe-game #reset-button:active {
+             transform: scale(0.98); /* Slight press effect */
+         }
+
+        /* Maze Specific Styles */
+        #maze-game .maze-container {
+            display: inline-grid;
+            grid-template-columns: repeat(auto-fit, minmax(30px, 1fr));
+            grid-gap: 0;
+            border: 3px solid #e94560; /* Accent border */
+            margin: 20px auto;
+        }
+        #maze-game .maze-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #0f3460; /* Border matching background */
+            box-sizing: border-box;
+            min-width: 40px; /* Ensure minimum touch size for maze cells */
+            min-height: 40px; /* Ensure minimum touch size for maze cells */
+        }
+        #maze-game .wall {
+            background-color: #333; /* Dark wall */
+        }
+        #maze-game .path {
+            background-color: #1a1a2e; /* Dark path */
+        }
+        #maze-game .player {
+            background-color: #4CAF50; /* Green player */
+            border-radius: 50%; /* Circular player */
+        }
+        #maze-game .exit {
+            background-color: #FFC107; /* Amber exit */
+        }
+
+
+        #maze-game #maze-status {
+            margin-top: 15px;
+            font-size: 1.5em;
+            color: #e94560; /* Accent color */
+        }
+
+        /* Quiz Specific Styles */
+         #quiz-game {
+            padding: 30px;
+         }
+
+         #quiz-game #quiz-question {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            color: #e94560; /* Accent color */
+         }
+
+         #quiz-game #quiz-options {
+             width: 100%; /* Make options container take full width */
+         }
+
+         #quiz-game #quiz-options button {
+            display: block;
+            width: 100%;
+            padding: 15px; /* Increased padding */
+            margin-bottom: 12px; /* Increased margin */
+            font-size: 1.1em;
+            cursor: pointer;
+            border: 1px solid #e94560; /* Accent border */
+            border-radius: 8px;
+            background-color: #1a1a2e; /* Dark background */
+            color: #e94560; /* Accent text color */
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
+         }
+
+         #quiz-game #quiz-options button:hover {
+            background-color: #e94560; /* Accent background on hover */
+            color: white;
+         }
+
+         #quiz-game #quiz-options button:disabled {
+             opacity: 0.6;
+             cursor: not-allowed;
+         }
+
+          #quiz-game #quiz-options button:active {
+             transform: scale(0.98); /* Slight press effect */
+         }
+
+
+         #quiz-game #quiz-status {
+            margin-top: 25px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #e94560; /* Accent color */
+         }
+
+         #quiz-game #next-quiz-button {
+            margin-top: 25px;
+            padding: 15px 25px; /* Increased padding */
+            font-size: 1.1em;
+            cursor: pointer;
+            background-color: #e94560; /* Accent color */
+            color: white;
+            border: none;
+            border-radius: 8px;
+             transition: background-color 0.3s ease, transform 0.1s ease;
+         }
+
+         #quiz-game #next-quiz-button:hover {
+             background-color: #ba364d; /* Darker accent on hover */
+         }
+
+          #quiz-game #next-quiz-button:active {
+             transform: scale(0.98); /* Slight press effect */
+         }
+
+
+        /* Dino Game Specific Styles */
+        #dino-game {
+            padding: 0; /* Remove padding for full game area */
+            background-color: #1a1a2e; /* Consistent background */
+            box-shadow: none; /* Remove shadow for game area */
+            border-radius: 0; /* Remove border radius */
+            max-width: 100%; /* Full width */
+            height: 100vh; /* Full viewport height */
+             overflow: hidden; /* Ensure game elements stay within bounds */
+             justify-content: flex-start; /* Align items to the top */
+        }
+
+
+        #dino-game #dino {
+            position: absolute;
+            bottom: 0;
+            left: 50px;
+            width: 40px;
+            height: 80px;
+            background-color: #4CAF50; /* Green dino */
+            z-index: 10;
+             transition: bottom 0.1s ease; /* Smooth jumping animation */
+        }
+
+        #dino-game .obstacle {
+            position: absolute;
+            bottom: 0;
+            width: 25px; /* Slightly wider obstacles */
+            height: 70px; /* Taller obstacles */
+            background-color: #FF5722; /* Orange obstacles */
+            z-index: 5;
+        }
+
+        #dino-game #dino-score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #e94560; /* Accent color */
+            z-index: 15;
+             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Add text shadow for visibility */
+        }
+
+        #dino-game #dino-game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4em; /* Larger game over text */
+            font-weight: bold;
+            color: #e94560; /* Accent color */
+            z-index: 20;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7); /* Stronger text shadow */
+        }
+
+        /* Back button styling */
+        .back-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #6c757d; /* Grey color for back button */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+
+        .back-button:hover {
+            background-color: #5a6268; /* Darker grey on hover */
+        }
+
+        .back-button:active {
+             transform: scale(0.98); /* Slight press effect */
+        }
+
+
+         /* Responsive adjustments */
+        @media (max-width: 600px) {
+            #loading-screen h1 {
+                font-size: 2em;
+            }
+
+            .loading-logo {
+                font-size: 1.2em;
+            }
+
+            #game-menu {
+                padding: 20px;
+            }
+
+            #game-menu h2 {
+                font-size: 1.8em;
+                margin-bottom: 20px;
+            }
+
+            #game-menu button {
+                padding: 15px;
+                font-size: 1em;
+            }
+
+            .board {
+                grid-template-columns: repeat(3, 60px); /* Smaller cells */
+                grid-gap: 5px;
+            }
+
+            .cell {
+                width: 60px;
+                height: 60px;
+                font-size: 2em;
+            }
+
+            #game-status, #maze-status, #quiz-status {
+                 font-size: 1.2em;
+            }
+
+            #reset-button, #next-quiz-button, .back-button { /* Include back button */
+                padding: 12px 20px;
+                font-size: 1em;
+            }
+
+            #quiz-question {
+                font-size: 1.5em;
+            }
+
+             #quiz-options button {
+                padding: 12px;
+                font-size: 0.9em;
+             }
+
+            #dino {
+                 width: 30px;
+                 height: 60px;
+                 left: 30px;
+            }
+
+            .obstacle {
+                width: 20px;
+                height: 50px;
+            }
+
+             #dino-score {
+                 font-size: 1.5em;
+                 top: 10px;
+                 right: 10px;
+             }
+
+             #dino-game-over {
+                 font-size: 3em;
+             }
+        }
+
+
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <h1>Welcome to the gamehub</h1>
+        <div class="loading-logo">Loading...</div>
+    </div>
+
+    <div id="game-menu">
+        <h2>Game Menu</h2>
+        <button id="tic-tac-toe-button">Tic Tac Toe</button>
+        <button id="maze-button">Simple Maze</button>
+        <button id="quiz-button">3-Level Quiz</button>
+        <button id="dino-button">Classic Google Dino Jump</button>
+    </div>
+
+    <div id="game-area">
+        <div id="tic-tac-toe-game">
+            <div id="game-status"></div>
+            <div class="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+            <button id="reset-button">Reset Game</button>
+            <button id="tic-tac-toe-back-button" class="back-button">Back to Menu</button> <!-- Back button -->
+        </div>
+
+        <div id="maze-game">
+             <div id="maze-container" class="maze-container">
+                <!-- Maze will be rendered here -->
+            </div>
+             <div id="maze-status"></div>
+             <button id="maze-back-button" class="back-button">Back to Menu</button> <!-- Back button -->
+        </div>
+
+        <div id="quiz-game">
+            <div id="quiz-question"></div>
+            <div id="quiz-options">
+                <!-- Answer options will be added here -->
+            </div>
+            <div id="quiz-status"></div>
+            <button id="next-quiz-button">Next Question</button>
+            <button id="quiz-back-button" class="back-button">Back to Menu</button> <!-- Back button -->
+        </div>
+
+        <div id="dino-game">
+            <!-- Game elements will be added here by JavaScript -->
+             <div id="dino-score">Score: 0</div>
+             <div id="dino-game-over">Game Over</div>
+             <button id="dino-back-button" class="back-button">Back to Menu</button> <!-- Back button -->
+        </div>
+
+    </div>
+
+    <script>
+        const loadingScreen = document.getElementById('loading-screen');
+        const gameMenu = document.getElementById('game-menu');
+        const gameArea = document.getElementById('game-area');
+        const ticTacToeGame = document.getElementById('tic-tac-toe-game');
+        const ticTacToeButton = document.getElementById('tic-tac-toe-button');
+        const mazeGame = document.getElementById('maze-game');
+        const mazeButton = document.getElementById('maze-button');
+        const quizGame = document.getElementById('quiz-game');
+        const quizButton = document.getElementById('quiz-button');
+        const dinoGame = document.getElementById('dino-game');
+        const dinoButton = document.getElementById('dino-button');
+
+        // Get back buttons
+        const ticTacToeBackButton = document.getElementById('tic-tac-toe-back-button');
+        const mazeBackButton = document.getElementById('maze-back-button');
+        const quizBackButton = document.getElementById('quiz-back-button');
+        const dinoBackButton = document.getElementById('dino-back-button');
+
+
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            gameMenu.style.display = 'block';
+        }, 2000);
+
+        function showGameMenu() {
+            gameArea.style.display = 'none';
+            ticTacToeGame.style.display = 'none';
+            mazeGame.style.display = 'none';
+            quizGame.style.display = 'none';
+            dinoGame.style.display = 'none';
+            gameMenu.style.display = 'block';
+        }
+
+
+        ticTacToeButton.addEventListener('click', () => {
+            gameMenu.style.display = 'none';
+            gameArea.style.display = 'block';
+            ticTacToeGame.style.display = 'block';
+            mazeGame.style.display = 'none'; // Hide other games
+            quizGame.style.display = 'none'; // Hide other games
+            dinoGame.style.display = 'none'; // Hide other games
+            // Initialize Tic Tac Toe game
+            if (typeof initializeTicTacToe === 'function') {
+                initializeTicTacToe();
+            }
+        });
+
+        mazeButton.addEventListener('click', () => {
+            gameMenu.style.display = 'none';
+            gameArea.style.display = 'block';
+            ticTacToeGame.style.display = 'none'; // Hide other games
+            mazeGame.style.display = 'block';
+            quizGame.style.display = 'none'; // Hide other games
+            dinoGame.style.display = 'none'; // Hide other games
+            // Initialize Maze game
+            if (typeof initializeMazeGame === 'function') {
+                 initializeMazeGame();
+            }
+        });
+
+        quizButton.addEventListener('click', () => {
+            gameMenu.style.display = 'none';
+            gameArea.style.display = 'block';
+            ticTacToeGame.style.display = 'none'; // Hide other games
+            mazeGame.style.display = 'none'; // Hide other games
+            quizGame.style.display = 'block';
+            dinoGame.style.display = 'none'; // Hide other games
+            // Initialize Quiz game
+             if (typeof initializeQuizGame === 'function') {
+                 initializeQuizGame();
+            }
+        });
+
+        dinoButton.addEventListener('click', () => {
+            gameMenu.style.display = 'none';
+            gameArea.style.display = 'block';
+            ticTacToeGame.style.display = 'none'; // Hide other games
+            mazeGame.style.display = 'none'; // Hide other games
+            quizGame.style.display = 'none'; // Hide other games
+            dinoGame.style.display = 'block';
+            // Initialize Dino game
+             if (typeof initializeDinoGame === 'function') {
+                 initializeDinoGame();
+            }
+        });
+
+        // Add event listeners for back buttons
+        if (ticTacToeBackButton) {
+             ticTacToeBackButton.addEventListener('click', showGameMenu);
+        }
+        if (mazeBackButton) {
+            mazeBackButton.addEventListener('click', showGameMenu);
+        }
+        if (quizBackButton) {
+            quizBackButton.addEventListener('click', showGameMenu);
+        }
+        if (dinoBackButton) {
+            dinoBackButton.addEventListener('click', showGameMenu);
+        }
+
+
+    </script>
+    <script src="tic_tac_toe.js"></script>
+    <script src="maze_game.js"></script>
+    <script src="quiz_game.js"></script>
+    <script src="dino_game.js"></script>
+</body>
+</html>
