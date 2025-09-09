@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Game Hub</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
+    h1 { margin-top: 20px; }
+    .menu, .game { display: none; }
+    .active { display: block; }
+    button { padding: 10px 20px; margin: 10px; border-radius: 10px; cursor: pointer; }
+
+    /* Tic Tac Toe */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 5px;
+      margin: 20px auto;
+      width: max-content;
+    }
+    .cell {
+      width: 100px; height: 100px;
+      background: #fff; border: 2px solid #333;
+      font-size: 2em; display: flex;
+      justify-content: center; align-items: center;
+      cursor: pointer;
+    }
+    .winner { color: green; font-weight: bold; }
+
+    /* Flappy Bird */
+    canvas { background: skyblue; display: block; margin: auto; }
+  </style>
+</head>
+<body>
+
+  <h1>🎮 Game Hub</h1>
+
+  <!-- MENU -->
+  <div id="menu" class="menu active">
+    <button onclick="showGame('flappy')">Flappy Bird</button>
+    <button onclick="showGame('quiz')">Quiz</button>
+    <button onclick="showGame('tetris')">Tetris</button>
+    <button onclick="showGame('tictactoe')">Tic-Tac-Toe</button>
+  </div>
+
+  <!-- ✅ Flappy Bird -->
+  <div id="flappy" class="game">
+    <h2>Flappy Bird</h2>
+    <canvas id="flappyCanvas" width="320" height="480"></canvas><br>
+    <button onclick="startFlappy()">▶ Start</button>
+    <button onclick="backToMenu()">⬅ Back</button>
+  </div>
+
+  <!-- ✅ Quiz -->
+  <div id="quiz" class="game">
+    <h2>Quiz Game</h2>
+    <div id="quizContainer"></div>
+    <p id="quizResult"></p>
+    <button onclick="backToMenu()">⬅ Back</button>
+  </div>
+
+  <!-- ✅ Tetris -->
+  <div id="tetris" class="game">
+    <h2>Tetris</h2>
+    <canvas id="tetrisCanvas" width="240" height="400"></canvas><br>
+    <button onclick="startTetris()">▶ Start</button>
+    <button onclick="backToMenu()">⬅ Back</button>
+  </div>
+
+  <!-- ✅ Tic Tac Toe -->
+  <div id="tictactoe" class="game">
+    <h2>Tic-Tac-Toe</h2>
+    <div id="board" class="board"></div>
+    <p id="status"></p>
+    <button onclick="resetGame()">🔄 Restart</button>
+    <button onclick="backToMenu()">⬅ Back</button>
+  </div>
+
+<script>
+  /* ---------------- Menu Switching ---------------- */
+  function showGame(gameId) {
+    document.querySelectorAll('.menu, .game').forEach(el => el.classList.remove('active'));
+    document.getElementById(gameId).classList.add('active');
+    if (gameId === "tictactoe") resetGame();
+    if (gameId === "quiz") startQuiz();
+  }
+  function backToMenu() {
+    document.querySelectorAll('.menu, .game').forEach(el => el.classList.remove('active'));
+    document.getElementById('menu').classList.add('active');
+  }
+
+  /* ---------------- Tic Tac Toe ---------------- */
+  let board, currentPlayer, gameActive;
+  function createBoard() {
+    const boardDiv = document.getElementById("board");
+    boardDiv.innerHTML = "";
+    board = Array(9).fill(null);
+    gameActive = true;
+    currentPlayer = "X";
+    document.getElementById("status").textContent = "Player X's turn";
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement("div");
+      cell.classList.add("cell");
+      cell.dataset.index = i;
+      cell.addEventListener("click", handleCellClick);
+      boardDiv.appendChild(cell);
+    }
+  }
+  function handleCellClick(e) {
+    const index = e.target.dataset.index;
+    if (!gameActive || board[index]) return;
+    board[index] = currentPlayer;
+    e.target.textContent = currentPlayer;
+    if (checkWinner()) {
+      document.getElementById("status").innerHTML =
+        `<span class="winner">🎉 Player ${currentPlayer} Wins!</span>`;
+      gameActive = false;
+      return;
+    }
+    if (!board.includes(null)) {
+      document.getElementById("status").textContent = "It's a Draw!";
+      gameActive = false;
+      return;
+    }
+    currentPlayer = currentPlayer === "X" ? "O" : "X";
+    document.getElementById("status").textContent = `Player ${currentPlayer}'s turn`;
+  }
+  function checkWinner() {
+    const combos = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    return combos.some(([a,b,c]) => board[a] && board[a] === board[b] && board[a] === board[c]);
+  }
+  function resetGame() { createBoard(); }
+  createBoard();
+
+  /* ---------------- Quiz ---------------- */
+  const questions = [
+    { q: "Capital of France?", options: ["Berlin","Madrid","Paris","Rome"], answer: 2 },
+    { q: "2 + 2 = ?", options: ["3","4","5","6"], answer: 1 },
+    { q: "Largest planet?", options: ["Earth","Mars","Jupiter","Venus"], answer: 2 }
+  ];
+  function startQuiz() {
+    let html = "";
+    questions.forEach((ques, i) => {
+      html += `<p>${ques.q}</p>`;
+      ques.options.forEach((opt, j) => {
+        html += `<label><input type="radio" name="q${i}" value="${j}"> ${opt}</label><br>`;
+      });
+    });
+    html += `<button onclick="submitQuiz()">Submit</button>`;
+    document.getElementById("quizContainer").innerHTML = html;
+    document.getElementById("quizResult").textContent = "";
+  }
+  function submitQuiz() {
+    let score = 0;
+    questions.forEach((ques, i) => {
+      const ans = document.querySelector(`input[name="q${i}"]:checked`);
+      if (ans && parseInt(ans.value) === ques.answer) score++;
+    });
+    document.getElementById("quizResult").textContent = `You scored ${score}/${questions.length}`;
+  }
+
+  /* ---------------- Flappy Bird ---------------- */
+  let flappyCtx, flappyBird, flappyGravity, flappyPipes, flappyScore, flappyGame;
+  function startFlappy() {
+    const canvas = document.getElementById("flappyCanvas");
+    flappyCtx = canvas.getContext("2d");
+    flappyBird = { x: 50, y: 150, width: 20, height: 20, velocity: 0 };
+    flappyGravity = 0.6;
+    flappyPipes = [];
+    flappyScore = 0;
+    if (flappyGame) clearInterval(flappyGame);
+    flappyGame = setInterval(updateFlappy, 20);
+    document.addEventListener("keydown", () => flappyBird.velocity = -8);
+  }
+  function updateFlappy() {
+    flappyCtx.clearRect(0, 0, 320, 480);
+    // Bird
+    flappyBird.velocity += flappyGravity;
+    flappyBird.y += flappyBird.velocity;
+    flappyCtx.fillStyle = "yellow";
+    flappyCtx.fillRect(flappyBird.x, flappyBird.y, flappyBird.width, flappyBird.height);
+    // Pipes
+    if (Math.random() < 0.02) {
+      const gap = 100, top = Math.random() * 200 + 50;
+      flappyPipes.push({ x: 320, top: top, gap: gap });
+    }
+    flappyPipes.forEach(p => p.x -= 2);
+    flappyPipes = flappyPipes.filter(p => p.x > -50);
+    flappyCtx.fillStyle = "green";
+    flappyPipes.forEach(p => {
+      flappyCtx.fillRect(p.x, 0, 40, p.top);
+      flappyCtx.fillRect(p.x, p.top + p.gap, 40, 480);
+      // Collision
+      if (flappyBird.x < p.x + 40 && flappyBird.x + flappyBird.width > p.x &&
+         (flappyBird.y < p.top || flappyBird.y + flappyBird.height > p.top + p.gap)) {
+        clearInterval(flappyGame);
+        flappyCtx.fillStyle = "red";
+        flappyCtx.fillText("Game Over", 120, 240);
+      }
+      if (p.x === flappyBird.x) flappyScore++;
+    });
+    // Score
+    flappyCtx.fillStyle = "black";
+    flappyCtx.fillText("Score: " + flappyScore, 10, 20);
+    // Ground
+    if (flappyBird.y + flappyBird.height > 480) {
+      clearInterval(flappyGame);
+      flappyCtx.fillStyle = "red";
+      flappyCtx.fillText("Game Over", 120, 240);
+    }
+  }
+
+  /* ---------------- Tetris ---------------- */
+  const tetrisCanvas = document.getElementById("tetrisCanvas");
+  const tetrisCtx = tetrisCanvas.getContext("2d");
+  const ROW = 20, COL = 10, SQ = 20;
+  let tetrisBoard, dropStart, tetrisGame;
+  function drawSquare(x,y,color){ tetrisCtx.fillStyle=color; tetrisCtx.fillRect(x*SQ,y*SQ,SQ,SQ); tetrisCtx.strokeStyle="black"; tetrisCtx.strokeRect(x*SQ,y*SQ,BLOCK,BLOCK); }
+  function drawBoard(){ for(let r=0;r<ROW;r++){ for(let c=0;c<COL;c++){ drawSquare(c,r,tetrisBoard[r][c]); } } }
+  function initBoard(){ tetrisBoard=[]; for(let r=0;r<ROW;r++){ tetrisBoard[r]=[]; for(let c=0;c<COL;c++){ tetrisBoard[r][c]="white"; } } }
+  function startTetris(){ initBoard(); drawBoard(); if(tetrisGame) clearInterval(tetrisGame); dropStart=Date.now(); tetrisGame=setInterval(()=>{ /* Simple placeholder */ drawSquare(Math.floor(Math.random()*COL),0,"red"); },500); }
+</script>
+
+</body>
+</html>
